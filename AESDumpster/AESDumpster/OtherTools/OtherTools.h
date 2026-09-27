@@ -8,8 +8,7 @@
 #include <fstream>
 #include <cassert>
 #include <sys/stat.h>
-#include <Windows.h>
-#include <Psapi.h>
+#include "../AESDumpster/Platform.h"
 #include <vector>
 
 class OtherTools
@@ -18,9 +17,9 @@ public:
   OtherTools();
   void PrintIntro();
   void PrintInstructions();
-  void PrintFileName(HANDLE hConsole, const wchar_t* argv);
+  void PrintFileName(HANDLE hConsole, const pathchar* argv);
   void PrintOutro(HANDLE hConsole);
-  int CreateExeBuffer(std::wstring filepath);
+  int CreateExeBuffer(pathstring filepath);
 	~OtherTools();
 
 public:

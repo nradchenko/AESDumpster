@@ -5,45 +5,58 @@ OtherTools::OtherTools()
 }
 
 void OtherTools::PrintIntro() {
-  std::wcout << "AESDumpster 1.2.5 - By GHFear @ IllusorySoftware" << std::endl;
-  std::wcout << "Supports Unreal Engine 4.19 -> 5.3 | (Will soon support UE 4.0 - 4.18 as well)\n\n" << std::endl;
+  pcout << "AESDumpster 1.2.5 - By GHFear @ IllusorySoftware" << std::endl;
+  pcout << "Supports Unreal Engine 4.19 -> 5.3 | (Will soon support UE 4.0 - 4.18 as well)\n\n" << std::endl;
 }
 
 void OtherTools::PrintInstructions() {
-  std::wcout << L"Usage:\n";
-  std::wcout << L"-Drag and drop Unreal Engine executables onto AESDumpster.exe.\n";
-  std::wcout << L"-Wait for the tool to finish.\n";
+  pcout << "Usage:\n";
+  pcout << "-Drag and drop Unreal Engine executables onto AESDumpster.exe.\n";
+  pcout << "-Wait for the tool to finish.\n";
   std::cin.ignore();
 }
 
-void OtherTools::PrintFileName(HANDLE hConsole, const wchar_t* argv) {
+void OtherTools::PrintFileName(HANDLE hConsole, const pathchar* argv) {
   SetConsoleTextAttribute(hConsole, 14);
-  std::wcout << argv << std::endl;
+  pcout << argv << std::endl;
   SetConsoleTextAttribute(hConsole, 15);
 }
 
 void OtherTools::PrintOutro(HANDLE hConsole) {
   SetConsoleTextAttribute(hConsole, 10);
-  std::wcout << "Done!\n";
+  pcout << "Done!\n";
   SetConsoleTextAttribute(hConsole, 15);
 }
 
-int OtherTools::CreateExeBuffer(std::wstring filepath) {
-  
+int OtherTools::CreateExeBuffer(pathstring filepath) {
+
   // Open file (exe).
   FILE* exe_file = nullptr;
+#if defined _WIN32
   _wfopen_s(&exe_file, filepath.c_str(), L"rb");
+#else
+  exe_file = fopen(filepath.c_str(), "rb");
+#endif
   if (exe_file == NULL) {
     assert("Error opening exe file");
     return 1;
   }
 
+#if defined _WIN32
   // Save start position.
   uint64_t exe_start_pos = _ftelli64(exe_file);
   // Save archive size and go back to start position.
   _fseeki64(exe_file, 0, SEEK_END);
   uint64_t exe_size = _ftelli64(exe_file);
   _fseeki64(exe_file, exe_start_pos, SEEK_SET);
+#else
+  // Save start position.
+  uint64_t exe_start_pos = ftello(exe_file);
+  // Save archive size and go back to start position.
+  fseeko(exe_file, 0, SEEK_END);
+  uint64_t exe_size = ftello(exe_file);
+  fseeko(exe_file, exe_start_pos, SEEK_SET);
+#endif
 
   // Create buffer.
   char* file_buffer = (char*)malloc(exe_size);
