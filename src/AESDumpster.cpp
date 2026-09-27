@@ -1,7 +1,7 @@
 // AESDumpster 1.2.5 by GHFear
 
-#include "../OtherTools/OtherTools.h"
-#include "../KeyTools/KeyDumpster.h"
+#include "OtherTools.h"
+#include "KeyDumpster.h"
 #include <vector>
 
 #if defined(_WIN32) && defined(_DEBUG)

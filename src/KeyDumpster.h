@@ -8,7 +8,7 @@
 #include <fstream>
 #include <cassert>
 #include <sys/stat.h>
-#include "../AESDumpster/Platform.h"
+#include "Platform.h"
 #include <vector>
 
 class Key

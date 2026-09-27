@@ -3,8 +3,7 @@ CXX      ?= g++
 CROSS    ?= x86_64-w64-mingw32-
 CXXFLAGS ?= -std=c++17 -O2 -Wall -D_FILE_OFFSET_BITS=64
 
-SRCDIR   := AESDumpster/AESDumpster
-SRCS     := $(wildcard $(SRCDIR)/AESDumpster/*.cpp $(SRCDIR)/KeyTools/*.cpp $(SRCDIR)/OtherTools/*.cpp)
+SRCS     := $(wildcard src/*.cpp)
 
 .PHONY: all debug windows clean
 

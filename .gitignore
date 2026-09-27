@@ -1,0 +1,11 @@
+# Build outputs
+aesdumpster
+aesdumpster.exe
+*.o
+*.obj
+
+# Visual Studio build artifacts
+.vs/
+x64/
+*.VC.db
+*.VC.opendb
