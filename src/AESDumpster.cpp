@@ -1,4 +1,6 @@
-// AESDumpster 1.2.5 by GHFear
+// AESDumpster - extract AES-256 encryption keys from Unreal Engine executables.
+// Cross-platform fork of AESDumpster by GHFear: https://github.com/GHFear/AESDumpster
+// Fork modifications are MIT licensed; see LICENSE and NOTICE.
 
 #include "OtherTools.h"
 #include "KeyDumpster.h"
