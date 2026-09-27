@@ -4,7 +4,39 @@
 
 #include "OtherTools.h"
 #include "KeyDumpster.h"
+#include "Version.h"
+#include <cstring>
 #include <vector>
+
+// Compares a path string against an ASCII literal, works for both
+// pathchar widths.
+static bool EqualsAscii(const pathstring& s, const char* ascii)
+{
+  if (s.size() != strlen(ascii)) { return false; }
+  for (size_t i = 0; i < s.size(); i++) {
+    if (s[i] != (pathchar)ascii[i]) { return false; }
+  }
+  return true;
+}
+
+// Handles -h/--help and -V/--version. Returns true if an informational flag
+// was handled and the program should exit.
+static bool HandleInfoFlags(const std::vector<pathstring>& args)
+{
+  OtherTools other_tools;
+
+  for (const pathstring& arg : args) {
+    if (EqualsAscii(arg, "-h") || EqualsAscii(arg, "--help")) {
+      other_tools.PrintUsage();
+      return true;
+    }
+    if (EqualsAscii(arg, "-V") || EqualsAscii(arg, "--version")) {
+      pcout << "AESDumpster " << AESDUMPSTER_VERSION << std::endl;
+      return true;
+    }
+  }
+  return false;
+}
 
 #if defined(_WIN32) && defined(_DEBUG)
 // Debug main logic
@@ -93,6 +125,8 @@ int wmain(int argc, wchar_t* argv[])
   // Collect command line arguments.
   std::vector<pathstring> args(argv + 1, argv + argc);
 
+  if (HandleInfoFlags(args)) { return 0; }
+
 #if defined _DEBUG
   debugmain(hConsole);
 #else
@@ -111,6 +145,8 @@ int main(int argc, char* argv[])
 
   // Collect command line arguments.
   std::vector<pathstring> args(argv + 1, argv + argc);
+
+  if (HandleInfoFlags(args)) { return 0; }
 
   releasemain(hConsole, args);
 

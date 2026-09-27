@@ -20,6 +20,7 @@ class OtherTools
 public:
   OtherTools();
   void PrintIntro();
+  void PrintUsage();
   void PrintInstructions();
   void PrintFileName(HANDLE hConsole, const pathchar* argv);
   void PrintOutro(HANDLE hConsole);

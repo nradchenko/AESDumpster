@@ -45,4 +45,14 @@ out=$(wine aesdumpster.exe "Z:$FIXTURE" </dev/null 2>/dev/null)
 echo "$out" | grep -q "0x$KEY" || fail "wine test: key not found"
 echo "PASS: windows-under-wine"
 
+# 6. --help prints usage.
+out=$(./aesdumpster --help </dev/null)
+echo "$out" | grep -q "Usage: aesdumpster" || fail "--help test: usage not printed"
+echo "PASS: help-flag"
+
+# 7. --version prints name and a version string.
+out=$(./aesdumpster --version </dev/null)
+echo "$out" | grep -qE "^AESDumpster .+" || fail "--version test: version not printed"
+echo "PASS: version-flag"
+
 echo "All tests passed."

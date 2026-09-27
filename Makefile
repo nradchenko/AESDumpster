@@ -1,7 +1,8 @@
 # AESDumpster Makefile (Linux builds; 'windows' cross-compiles with mingw-w64)
 CXX      ?= g++
 CROSS    ?= x86_64-w64-mingw32-
-CXXFLAGS ?= -std=c++17 -O2 -Wall -D_FILE_OFFSET_BITS=64
+VERSION  := $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+CXXFLAGS ?= -std=c++17 -O2 -Wall -D_FILE_OFFSET_BITS=64 -DAESDUMPSTER_VERSION=\"$(VERSION)\"
 
 SRCS     := $(wildcard src/*.cpp)
 

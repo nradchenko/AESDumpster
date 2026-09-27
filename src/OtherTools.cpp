@@ -3,25 +3,33 @@
 // Fork modifications are MIT licensed; see LICENSE and NOTICE.
 
 #include "OtherTools.h"
+#include "Version.h"
 
 OtherTools::OtherTools()
 {
 }
 
 void OtherTools::PrintIntro() {
-  pcout << "AESDumpster 1.2.5 - By GHFear @ IllusorySoftware" << std::endl;
+  pcout << "AESDumpster " << AESDUMPSTER_VERSION << std::endl;
   pcout << "Supports Unreal Engine 4.19 -> 5.3 | (Will soon support UE 4.0 - 4.18 as well)\n\n" << std::endl;
 }
 
-void OtherTools::PrintInstructions() {
-  pcout << "Usage:\n";
+void OtherTools::PrintUsage() {
+  pcout << "Usage: aesdumpster <exe> [exe ...]\n\n";
+  pcout << "Scans Unreal Engine executables (UE 4.19 - 5.3) for AES-256\n";
+  pcout << "encryption keys and prints candidates ranked by entropy.\n\n";
+  pcout << "  -h, --help     show this help and exit\n";
+  pcout << "  -V, --version  show version and exit\n";
 #if defined _WIN32
-  pcout << "-Drag and drop Unreal Engine executables onto AESDumpster.exe.\n";
-  pcout << "-Wait for the tool to finish.\n";
+  pcout << "\nOn Windows you can also drag and drop executables onto AESDumpster.exe.\n";
+#endif
+}
+
+void OtherTools::PrintInstructions() {
+  PrintUsage();
+#if defined _WIN32
   // Keep the drag-and-drop console window open.
   std::cin.ignore();
-#else
-  pcout << "-Run AESDumpster with the path(s) to Unreal Engine executables as arguments.\n";
 #endif
 }
 
