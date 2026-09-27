@@ -136,6 +136,7 @@
   <ItemGroup>
     <ClInclude Include="KeyTools\KeyDumpster.h" />
     <ClInclude Include="OtherTools\OtherTools.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="Resources\resource.h" />
   </ItemGroup>
   <ItemGroup>

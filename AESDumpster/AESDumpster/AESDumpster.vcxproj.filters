@@ -47,6 +47,9 @@
     <ClInclude Include="OtherTools\OtherTools.h">
       <Filter>Header Files\OtherTools</Filter>
     </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Resources\AESDumpster.rc">
