@@ -1,4 +1,6 @@
 #include "KeyDumpster.h"
+#include <cmath>
+#include <cfloat>
 
 KeyDumpster::KeyDumpster()
 {

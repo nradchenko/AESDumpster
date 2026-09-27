@@ -8,8 +8,7 @@
 #include <fstream>
 #include <cassert>
 #include <sys/stat.h>
-#include <Windows.h>
-#include <Psapi.h>
+#include "../AESDumpster/Platform.h"
 #include <vector>
 
 class Key
