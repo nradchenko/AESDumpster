@@ -11,9 +11,14 @@ void OtherTools::PrintIntro() {
 
 void OtherTools::PrintInstructions() {
   pcout << "Usage:\n";
+#if defined _WIN32
   pcout << "-Drag and drop Unreal Engine executables onto AESDumpster.exe.\n";
   pcout << "-Wait for the tool to finish.\n";
+  // Keep the drag-and-drop console window open.
   std::cin.ignore();
+#else
+  pcout << "-Run AESDumpster with the path(s) to Unreal Engine executables as arguments.\n";
+#endif
 }
 
 void OtherTools::PrintFileName(HANDLE hConsole, const pathchar* argv) {
