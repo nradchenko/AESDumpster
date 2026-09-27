@@ -8,7 +8,7 @@
 #include <string>
 
 #if defined _WIN32
-#include <Windows.h>
+#include <windows.h>
 
 // Paths are wide on Windows, narrow UTF-8 everywhere else.
 using pathchar = wchar_t;
