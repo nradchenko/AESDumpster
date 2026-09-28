@@ -24,7 +24,9 @@ public:
   void PrintInstructions();
   void PrintFileName(HANDLE hConsole, const pathchar* argv);
   void PrintOutro(HANDLE hConsole);
+  void PrintFileError(const pathstring& filepath, const char* what, int err);
   int CreateExeBuffer(pathstring filepath);
+  void FreeExeBuffer();
 	~OtherTools();
 
 public:

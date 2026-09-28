@@ -55,4 +55,12 @@ out=$(./aesdumpster --version </dev/null)
 echo "$out" | grep -qE "^AESDumpster .+" || fail "--version test: version not printed"
 echo "PASS: version-flag"
 
+# 8. Unreadable file: error on stderr, remaining files still scanned, exit 1.
+rc=0
+out=$(./aesdumpster "$TMPDIR_FIXTURE/missing.bin" "$FIXTURE" </dev/null 2>"$TMPDIR_FIXTURE/err.txt") || rc=$?
+[ "$rc" -eq 1 ] || fail "missing-file test: expected exit 1, got $rc"
+grep -q "missing.bin: cannot open: No such file or directory" "$TMPDIR_FIXTURE/err.txt" || fail "missing-file test: error not on stderr"
+echo "$out" | grep -q "0x$KEY" || fail "missing-file test: next file not scanned"
+echo "PASS: missing-file"
+
 echo "All tests passed."

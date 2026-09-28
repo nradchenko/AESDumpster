@@ -4,6 +4,8 @@
 
 #include "OtherTools.h"
 #include "Version.h"
+#include <cerrno>
+#include <system_error>
 
 OtherTools::OtherTools()
 {
@@ -45,17 +47,23 @@ void OtherTools::PrintOutro(HANDLE hConsole) {
   SetConsoleTextAttribute(hConsole, 15);
 }
 
+// Reports a file error on stderr, e.g. "Error: game.exe: cannot open: No such file or directory".
+void OtherTools::PrintFileError(const pathstring& filepath, const char* what, int err) {
+  pcerr << "Error: " << filepath << ": " << what << ": " << std::generic_category().message(err).c_str() << std::endl;
+}
+
 int OtherTools::CreateExeBuffer(pathstring filepath) {
 
   // Open file (exe).
   FILE* exe_file = nullptr;
 #if defined _WIN32
-  _wfopen_s(&exe_file, filepath.c_str(), L"rb");
+  int open_err = _wfopen_s(&exe_file, filepath.c_str(), L"rb");
 #else
   exe_file = fopen(filepath.c_str(), "rb");
+  int open_err = errno;
 #endif
   if (exe_file == NULL) {
-    assert("Error opening exe file");
+    PrintFileError(filepath, "cannot open", open_err);
     return 1;
   }
 
@@ -78,7 +86,7 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
   // Create buffer.
   char* file_buffer = (char*)malloc(exe_size);
   if (file_buffer == NULL) {
-    assert("Error allocating memory");
+    PrintFileError(filepath, "cannot allocate buffer", ENOMEM);
     return 1;
   }
 
@@ -90,6 +98,14 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
   retval.size = exe_size;
 
   return 0;
+}
+
+// Releases the buffer from CreateExeBuffer() and clears retval so a stale
+// pointer is never reused for the next file.
+void OtherTools::FreeExeBuffer() {
+  free(retval.buffer);
+  retval.buffer = nullptr;
+  retval.size = 0;
 }
 
 OtherTools::~OtherTools()

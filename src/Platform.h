@@ -18,6 +18,7 @@
 using pathchar = wchar_t;
 using pathstring = std::wstring;
 inline auto& pcout = std::wcout;
+inline auto& pcerr = std::wcerr;
 #else
 #define STD_OUTPUT_HANDLE ((std::uint32_t)-11)
 using HANDLE = int;
@@ -44,4 +45,5 @@ inline void SetConsoleTextAttribute(HANDLE console, int attribute)
 using pathchar = char;
 using pathstring = std::string;
 inline auto& pcout = std::cout;
+inline auto& pcerr = std::cerr;
 #endif

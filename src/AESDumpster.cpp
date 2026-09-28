@@ -63,7 +63,7 @@ void debugmain(HANDLE hConsole)
   // Destruct KeyDumpster
   key_dumpster->~KeyDumpster();
   // Free buffer when done with it.
-  free(other_tools->retval.buffer);
+  other_tools->FreeExeBuffer();
   // Print outro before exiting.
   other_tools->PrintOutro(hConsole);
   // Destruct OtherTools
@@ -73,8 +73,9 @@ void debugmain(HANDLE hConsole)
 }
 #endif
 
-// Release main logic
-void releasemain(HANDLE hConsole, const std::vector<pathstring>& args)
+// Release main logic. Returns the process exit code: 0 on success, 1 if any
+// file could not be read.
+int releasemain(HANDLE hConsole, const std::vector<pathstring>& args)
 {
   OtherTools* other_tools = new OtherTools();
 
@@ -84,16 +85,18 @@ void releasemain(HANDLE hConsole, const std::vector<pathstring>& args)
   if (args.empty()) {
     // Print instructions if launched without command.
     other_tools->PrintInstructions();
-    return;
+    return 0;
   }
+
+  int exit_code = 0;
 
   // Main loop.
   for (const pathstring& exe_path : args) {
     // Print filename (exe full path).
     other_tools->PrintFileName(hConsole, exe_path.c_str());
     // Create filebuffer using the given filepath.
-    if (other_tools->CreateExeBuffer(exe_path) != 0) { return; }
-    if (other_tools->retval.buffer == nullptr) { printf("retval.buffer == nullptr.\n");  break; }
+    // On failure the error is already reported; move on to the next file.
+    if (other_tools->CreateExeBuffer(exe_path) != 0) { exit_code = 1; continue; }
 
     // Create KeyDumpster object, scan for keys and print them.
     KeyDumpster* key_dumpster = new KeyDumpster();
@@ -105,14 +108,14 @@ void releasemain(HANDLE hConsole, const std::vector<pathstring>& args)
     // Destruct KeyTool object
     key_dumpster->~KeyDumpster();
     // Free buffer when done with it.
-    free(other_tools->retval.buffer);
+    other_tools->FreeExeBuffer();
   }
   // Print outro before exiting.
   other_tools->PrintOutro(hConsole);
   // Destruct OtherTools object
   other_tools->~OtherTools();
 
-  return;
+  return exit_code;
 }
 
 #if defined _WIN32
@@ -127,14 +130,15 @@ int wmain(int argc, wchar_t* argv[])
 
   if (HandleInfoFlags(args)) { return 0; }
 
+  int exit_code = 0;
 #if defined _DEBUG
   debugmain(hConsole);
 #else
-  releasemain(hConsole, args);
+  exit_code = releasemain(hConsole, args);
 #endif
 
   std::cin.ignore();
-  return 0;
+  return exit_code;
 }
 #else
 // Entrypoint
@@ -148,8 +152,6 @@ int main(int argc, char* argv[])
 
   if (HandleInfoFlags(args)) { return 0; }
 
-  releasemain(hConsole, args);
-
-  return 0;
+  return releasemain(hConsole, args);
 }
 #endif
