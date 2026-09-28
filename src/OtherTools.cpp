@@ -85,13 +85,21 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
 
   // Create buffer.
   char* file_buffer = (char*)malloc(exe_size);
-  if (file_buffer == NULL) {
+  if (file_buffer == NULL && exe_size > 0) {
     PrintFileError(filepath, "cannot allocate buffer", ENOMEM);
+    fclose(exe_file);
     return 1;
   }
 
-  // Read file into buffer.
-  fread(file_buffer, exe_size, 1, exe_file);
+  // Read file into buffer. A short read (I/O error, file truncated while
+  // reading) would otherwise leave part of the buffer uninitialized.
+  if (exe_size > 0 && fread(file_buffer, exe_size, 1, exe_file) != 1) {
+    PrintFileError(filepath, "read failed", ferror(exe_file) ? errno : EIO);
+    free(file_buffer);
+    fclose(exe_file);
+    return 1;
+  }
+  fclose(exe_file);
 
   //Fill struct return values.
   retval.buffer = file_buffer;

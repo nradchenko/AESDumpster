@@ -33,7 +33,7 @@ Tests (Linux + wine for the Windows binary): `bash tests/run_tests.sh` — build
 
 Debug builds use `debugmain()` in `src/AESDumpster.cpp`, which scans a **hardcoded exe path** (`Z:\Exes\...`) — set your own path there or debug builds do nothing useful. Debug is Windows-only; on Linux `_DEBUG` falls through to `releasemain`. Release builds use `releasemain()` with command-line args (multiple exes per run are supported); `-h/--help` and `-V/--version` are handled in the entry points.
 
-Known benign gcc warnings: `-Wmultichar` at the `(WORD)'\?\?'` literal in `Find()` (multichar value 0x3F3F on both compilers) and `-Wunused-result` on the unchecked `fread` in `CreateExeBuffer`.
+Known benign gcc warning: `-Wmultichar` at the `(WORD)'\?\?'` literal in `Find()` (multichar value 0x3F3F on both compilers).
 
 ## Architecture
 

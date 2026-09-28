@@ -63,4 +63,17 @@ grep -q "missing.bin: cannot open: No such file or directory" "$TMPDIR_FIXTURE/e
 echo "$out" | grep -q "0x$KEY" || fail "missing-file test: next file not scanned"
 echo "PASS: missing-file"
 
+# 9. Many files under a low fd limit: each file must be closed after reading.
+FILES=(); for _ in $(seq 32); do FILES+=("$FIXTURE"); done
+out=$( (ulimit -n 16; ./aesdumpster "${FILES[@]}" </dev/null) ) || fail "fd-limit test: non-zero exit (file descriptor leak?)"
+[ "$(echo "$out" | grep -c "0x$KEY")" -eq 32 ] || fail "fd-limit test: not every file was scanned"
+echo "PASS: fd-limit"
+
+# 10. Empty file: no keys, not an error.
+EMPTY="$TMPDIR_FIXTURE/empty.bin"
+: > "$EMPTY"
+out=$(./aesdumpster "$EMPTY" </dev/null) || fail "empty-file test: non-zero exit"
+echo "$out" | grep -q "There were no keys to be found" || fail "empty-file test: no-keys message missing"
+echo "PASS: empty-file"
+
 echo "All tests passed."
