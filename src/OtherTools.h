@@ -29,6 +29,9 @@ public:
   void FreeExeBuffer();
 	~OtherTools();
 
+private:
+  int ReadStream(FILE* stream);
+
 public:
   struct RETVAL { char* buffer = nullptr; uint64_t size = 0; } retval;
 

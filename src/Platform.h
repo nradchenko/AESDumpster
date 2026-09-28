@@ -8,8 +8,10 @@
 // selects the path character type (wide on Windows, narrow UTF-8 elsewhere).
 
 #include <cstdint>
+#include <cstdio>
 #include <iostream>
 #include <string>
+#include <sys/stat.h>
 
 #if defined _WIN32
 #include <windows.h>
@@ -47,3 +49,28 @@ using pathstring = std::string;
 inline auto& pcout = std::cout;
 inline auto& pcerr = std::cerr;
 #endif
+
+// Kind of file behind an open stdio stream: a regular file has a known
+// size up front; anything else that is readable (pipe, FIFO, character
+// device, process substitution) has to be read until EOF.
+enum class FileKind { Regular, Directory, Stream, Error };
+
+// Classifies an open file; sets size for regular files. Error leaves errno set.
+inline FileKind GetFileKind(FILE* file, std::uint64_t& size)
+{
+#if defined _WIN32
+  struct _stat64 st;
+  if (_fstat64(_fileno(file), &st) != 0) { return FileKind::Error; }
+  switch (st.st_mode & _S_IFMT) {
+    case _S_IFREG: size = (std::uint64_t)st.st_size; return FileKind::Regular;
+    case _S_IFDIR: return FileKind::Directory;
+    default: return FileKind::Stream;
+  }
+#else
+  struct stat st;
+  if (fstat(fileno(file), &st) != 0) { return FileKind::Error; }
+  if (S_ISREG(st.st_mode)) { size = (std::uint64_t)st.st_size; return FileKind::Regular; }
+  if (S_ISDIR(st.st_mode)) { return FileKind::Directory; }
+  return FileKind::Stream;
+#endif
+}

@@ -5,6 +5,8 @@
 #include "OtherTools.h"
 #include "Version.h"
 #include <cerrno>
+#include <cstdint>
+#include <cstdlib>
 #include <system_error>
 
 OtherTools::OtherTools()
@@ -67,21 +69,31 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
     return 1;
   }
 
-#if defined _WIN32
-  // Save start position.
-  uint64_t exe_start_pos = _ftelli64(exe_file);
-  // Save archive size and go back to start position.
-  _fseeki64(exe_file, 0, SEEK_END);
-  uint64_t exe_size = _ftelli64(exe_file);
-  _fseeki64(exe_file, exe_start_pos, SEEK_SET);
-#else
-  // Save start position.
-  uint64_t exe_start_pos = ftello(exe_file);
-  // Save archive size and go back to start position.
-  fseeko(exe_file, 0, SEEK_END);
-  uint64_t exe_size = ftello(exe_file);
-  fseeko(exe_file, exe_start_pos, SEEK_SET);
-#endif
+  // Regular files are read in one go using their size; directories are
+  // rejected (fopen() succeeds on them on Linux); pipes and other streams
+  // have no size up front and are read until EOF.
+  uint64_t exe_size = 0;
+  FileKind kind = GetFileKind(exe_file, exe_size);
+  if (kind == FileKind::Error || kind == FileKind::Directory) {
+    PrintFileError(filepath, "cannot read", kind == FileKind::Directory ? EISDIR : errno);
+    fclose(exe_file);
+    return 1;
+  }
+  if (kind == FileKind::Stream) {
+    int err = ReadStream(exe_file);
+    fclose(exe_file);
+    if (err != 0) {
+      PrintFileError(filepath, "read failed", err);
+      return 1;
+    }
+    return 0;
+  }
+  // The whole file must fit in the address space (matters for 32-bit builds).
+  if (exe_size > SIZE_MAX) {
+    PrintFileError(filepath, "cannot allocate buffer", EFBIG);
+    fclose(exe_file);
+    return 1;
+  }
 
   // Create buffer.
   char* file_buffer = (char*)malloc(exe_size);
@@ -105,6 +117,39 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
   retval.buffer = file_buffer;
   retval.size = exe_size;
 
+  return 0;
+}
+
+// Reads a stream of unknown length until EOF into a growing buffer and
+// fills retval. Returns 0 on success, otherwise an errno value.
+int OtherTools::ReadStream(FILE* stream) {
+  size_t capacity = 1 << 20;
+  size_t size = 0;
+  char* buffer = (char*)malloc(capacity);
+  if (buffer == NULL) { return ENOMEM; }
+
+  for (;;) {
+    size += fread(buffer + size, 1, capacity - size, stream);
+    if (size < capacity) {
+      if (ferror(stream)) {
+        int err = errno ? errno : EIO;
+        free(buffer);
+        return err;
+      }
+      break; // EOF
+    }
+    // Buffer full: double it and keep reading.
+    char* grown = (capacity <= SIZE_MAX / 2) ? (char*)realloc(buffer, capacity * 2) : NULL;
+    if (grown == NULL) {
+      free(buffer);
+      return ENOMEM;
+    }
+    buffer = grown;
+    capacity *= 2;
+  }
+
+  retval.buffer = buffer;
+  retval.size = size;
   return 0;
 }
 

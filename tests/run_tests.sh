@@ -76,4 +76,19 @@ out=$(./aesdumpster "$EMPTY" </dev/null) || fail "empty-file test: non-zero exit
 echo "$out" | grep -q "There were no keys to be found" || fail "empty-file test: no-keys message missing"
 echo "PASS: empty-file"
 
+# 11. Directory: rejected with an error instead of a bogus allocation.
+rc=0
+./aesdumpster "$TMPDIR_FIXTURE" </dev/null >/dev/null 2>"$TMPDIR_FIXTURE/err.txt" || rc=$?
+[ "$rc" -eq 1 ] || fail "directory test: expected exit 1, got $rc"
+grep -q "cannot read: Is a directory" "$TMPDIR_FIXTURE/err.txt" || fail "directory test: error not reported"
+echo "PASS: directory"
+
+# 12. Pipes: /dev/stdin and process substitution have no size up front. The
+# key sits after 3 MiB of padding so the stream buffer has to grow.
+out=$(cat "$FIXTURE" | ./aesdumpster /dev/stdin) || fail "stdin-pipe test: non-zero exit"
+echo "$out" | grep -q "0x$KEY" || fail "stdin-pipe test: key not found"
+out=$(./aesdumpster <(head -c 3145728 /dev/zero; cat "$FIXTURE") </dev/null) || fail "process-substitution test: non-zero exit"
+echo "$out" | grep -q "0x$KEY" || fail "process-substitution test: key not found"
+echo "PASS: pipes"
+
 echo "All tests passed."
