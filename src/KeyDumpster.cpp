@@ -24,14 +24,14 @@ std::vector<PBYTE> KeyDumpster::Find(const char* pattern, PBYTE rangeStart, PBYT
     if (*(PBYTE)pat == (BYTE)'\?' || *pCur == getByte(pat)) {
       if (!firstMatch) firstMatch = pCur;
       pat += (*(PWORD)pat == (WORD)'\?\?' || *(PBYTE)pat != (BYTE)'\?') ? 2 : 1;
+      if (*pat) pat++;
       if (!*pat) {
+        // Full match: record it and resume at the byte after its start, so
+        // overlapping matches are still found and pat never reads past its end.
         keyLocations.push_back(firstMatch);
-        continue;
-      }
-      pat++;
-      if (!*pat) {
-        keyLocations.push_back(firstMatch);
-        continue;
+        pCur = firstMatch;
+        pat = reinterpret_cast<const unsigned char*>(pattern);
+        firstMatch = 0;
       }
     }
     else if (firstMatch) {
