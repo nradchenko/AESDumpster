@@ -33,7 +33,8 @@ private:
   int ReadStream(FILE* stream);
 
 public:
-  struct RETVAL { char* buffer = nullptr; uint64_t size = 0; } retval;
+  // buffer is read-only when mapped is true (a MapFile() view).
+  struct RETVAL { char* buffer = nullptr; uint64_t size = 0; bool mapped = false; } retval;
 
 };
 

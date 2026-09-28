@@ -15,6 +15,7 @@
 
 #if defined _WIN32
 #include <windows.h>
+#include <io.h>
 
 // Paths are wide on Windows, narrow UTF-8 everywhere else.
 using pathchar = wchar_t;
@@ -44,6 +45,8 @@ inline void SetConsoleTextAttribute(HANDLE console, int attribute)
   }
 }
 
+#include <sys/mman.h>
+
 using pathchar = char;
 using pathstring = std::string;
 inline auto& pcout = std::cout;
@@ -72,5 +75,39 @@ inline FileKind GetFileKind(FILE* file, std::uint64_t& size)
   if (S_ISREG(st.st_mode)) { size = (std::uint64_t)st.st_size; return FileKind::Regular; }
   if (S_ISDIR(st.st_mode)) { return FileKind::Directory; }
   return FileKind::Stream;
+#endif
+}
+
+// Maps the first size bytes of an open regular file read-only. The mapping
+// stays valid after the file is closed. Returns nullptr if the file cannot be
+// mapped (e.g. a filesystem without mmap support) so the caller can fall back
+// to reading it.
+inline void* MapFile(FILE* file, std::uint64_t size)
+{
+#if defined _WIN32
+  HANDLE file_handle = (HANDLE)_get_osfhandle(_fileno(file));
+  HANDLE mapping = CreateFileMappingW(file_handle, NULL, PAGE_READONLY, 0, 0, NULL);
+  if (mapping == NULL) { return nullptr; }
+  void* view = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (SIZE_T)size);
+  // The view keeps the mapping object alive.
+  CloseHandle(mapping);
+  return view;
+#else
+  void* view = mmap(nullptr, (size_t)size, PROT_READ, MAP_PRIVATE, fileno(file), 0);
+  if (view == MAP_FAILED) { return nullptr; }
+  // The scanner makes one pass per signature, so ask for the whole file to
+  // be read ahead rather than MADV_SEQUENTIAL's drop-behind.
+  posix_madvise(view, (size_t)size, POSIX_MADV_WILLNEED);
+  return view;
+#endif
+}
+
+// Releases a mapping created by MapFile().
+inline void UnmapFile(void* view, std::uint64_t size)
+{
+#if defined _WIN32
+  UnmapViewOfFile(view);
+#else
+  munmap(view, (size_t)size);
 #endif
 }

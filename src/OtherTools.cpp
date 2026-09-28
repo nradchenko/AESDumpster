@@ -69,9 +69,9 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
     return 1;
   }
 
-  // Regular files are read in one go using their size; directories are
-  // rejected (fopen() succeeds on them on Linux); pipes and other streams
-  // have no size up front and are read until EOF.
+  // Regular files are mapped (or read) in one go using their size;
+  // directories are rejected (fopen() succeeds on them on Linux); pipes and
+  // other streams have no size up front and are read until EOF.
   uint64_t exe_size = 0;
   FileKind kind = GetFileKind(exe_file, exe_size);
   if (kind == FileKind::Error || kind == FileKind::Directory) {
@@ -93,6 +93,19 @@ int OtherTools::CreateExeBuffer(pathstring filepath) {
     PrintFileError(filepath, "cannot allocate buffer", EFBIG);
     fclose(exe_file);
     return 1;
+  }
+
+  // Map the file instead of copying it into memory; fall back to reading it
+  // if mapping is not supported.
+  if (exe_size > 0) {
+    void* view = MapFile(exe_file, exe_size);
+    if (view != nullptr) {
+      fclose(exe_file);
+      retval.buffer = (char*)view;
+      retval.size = exe_size;
+      retval.mapped = true;
+      return 0;
+    }
   }
 
   // Create buffer.
@@ -156,9 +169,15 @@ int OtherTools::ReadStream(FILE* stream) {
 // Releases the buffer from CreateExeBuffer() and clears retval so a stale
 // pointer is never reused for the next file.
 void OtherTools::FreeExeBuffer() {
-  free(retval.buffer);
+  if (retval.mapped) {
+    UnmapFile(retval.buffer, retval.size);
+  }
+  else {
+    free(retval.buffer);
+  }
   retval.buffer = nullptr;
   retval.size = 0;
+  retval.mapped = false;
 }
 
 OtherTools::~OtherTools()
